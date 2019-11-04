@@ -22,6 +22,8 @@ def OnMqttConnect(mqttClient, userData, flags, rc):
 def OnMqttDisconnect(mqttClient, userData, rc):
     if rc != 0:
         print("Unexpected disconnection from the MQTT broker.")
+        global isMqttConnected
+        isMqttConnected = False
 
 # OnMqttMessage callback function.
 # Parameters:
@@ -57,15 +59,16 @@ mqttClient.username_pw_set(mqtt_username, password=mqtt_password)
 mqttClient.on_connect= OnMqttConnect
 mqttClient._on_disconnect= OnMqttDisconnect
 mqttClient.on_message= OnMqttMessage
+print("Configuration Complete.")
 
 # Connect MQTT Client to broker.
-print("Establishing connection to MQTT broker...")
+print("Establishing initial connection to MQTT broker...")
 mqttClient.connect(mqtt_brokerAddress, port=mqtt_brokerPort)
 mqttClient.loop_start()
-
 while not isMqttConnected:
-    print("...")
+    print("Connecting ...")
     time.sleep(0.1) # Blocking but shouldn't be too bad.
+print("Connection Complete.")
 
 # Main program.
 # Not much to it as any new message gets handled automatically but the OnMqttMessage callback function.
@@ -73,6 +76,9 @@ while not isMqttConnected:
 try:
     while True:
         time.sleep(1)
+        while not isMqttConnected:
+            print("Reconnecting ...")
+            time.sleep(0.1) # Blocking but shouldn't be too bad.
 
 except KeyboardInterrupt:
     print("Interupt detected. Ending script")
